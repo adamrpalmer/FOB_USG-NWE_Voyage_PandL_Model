@@ -179,6 +179,15 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
-data/
-outputs/
+
+# Data (ignored but structure tracked)
+data/*
+!data/.gitkeep
+!data/**/.gitkeep
+
+# Outputs (regenerable artefacts)
+outputs/*
+!outputs/.gitkeep
+
+# Virtual environment
 .venv/
