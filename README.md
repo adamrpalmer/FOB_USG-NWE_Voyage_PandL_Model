@@ -310,7 +310,7 @@ which values are read is:
     discharge cargo pricing and NWE counterparty settlement.
 
 2.  Locate a historical date with similar spread and WTI level, let it
-    be $**t_{1}$. (more needed on how this is done)
+    be $**t_{1}$. 
 
 3.  Add ${(t}_{scheduling\ lag} - 1)$ to $t_{1}$. Represents time at
     which Aframax arrives within the origin port limits.
@@ -619,8 +619,7 @@ https://www.ice.com/publicdocs/contractregs/179_SECTION_7A1.pdf
 
 https://rosewoodfinance.co.uk/trade-finance/
 
-**What (non-technical explanation + outputs), Why (commercial
-relevance), Repo Structure, Reproducibility, How (Methodology,
-assumptions, limitations, exclusions), Improvements, License + Author**
+
 
 .
+
