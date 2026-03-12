@@ -3,9 +3,11 @@
 **Historical Monte-Carlo Simulation of WTI-Brent crude arbitrage under
 market and operational risk.**
 
+
 About: Independently designed and implemented in Python by Adam Palmer,
 second year undergrad at the University of Nottingham
 (19/12/25-present).
+
 
 The model is used as a decision tool for evaluating the commercial
 viability of a single Aframax shipment of WTI crude from the US Gulf
@@ -31,6 +33,7 @@ in 2015, exports surged and the spread reduced, often resulting in thin
 arbitrage margins. As arbitrage profitability is no longer obvious, the
 model provides decision-making insight.
 
+
 Project Charter:
 
 Commodity: Crude Oil
@@ -48,6 +51,7 @@ Cargo size: 730kbbl
 Incoterms: FOB Buy USG, CIF Sell NWE
 
 Decision rule: EV/CVaR~0.05~ ≥ 0.75
+
 
 Methodology
 
@@ -100,6 +104,7 @@ Sales and Purchase Agreement (SPA):
 
 - Settlement delay for NWE counterparty limited to 30 days
 
+
 Charterparty:
 
 - Aframax and freight rate are fixed at arbitrage decision
@@ -120,6 +125,7 @@ Charterparty:
 - Destination port fees accrued after discharge are borne by the
   shipowner
 
+
 Financing:
 
 - Letter of credit issued from bank to USG counterparty after arbitrage
@@ -131,6 +137,7 @@ Financing:
 
 - Interest rate fixed at BL, charged at SOFR 30-day average plus a
   positive basis range
+
 
 2.  P&L Function
 
@@ -193,6 +200,7 @@ $$And\ 84,000 = Seaport\ dues$$
 
 $$Scheduling\ lag = \ t_{scheduling\ lag}\sim Tri(3,15,5),days$$
 
+
 Fixed variables:
 
 - 730kbbl
@@ -213,6 +221,7 @@ Fixed variables:
 
 - €84,000 seaport due proxy
 
+
 Derived Random Variables:
 
 - $Financing\ exposure,\ days$
@@ -224,6 +233,7 @@ Derived Random Variables:
 - $Origin\ port\ fees,\ \$$
 
 - $Destination\ port\ fees,\ \$$
+
 
 Base Random Variables:
 
@@ -259,6 +269,7 @@ Base Random Variables:
 
 - $\varepsilon_{4}$
 
+
 3.  Simulation Algorithm:
 
 Non-deterministic variables are bootstrapped, dependent on commercial
@@ -272,6 +283,7 @@ The inner algorithm is designed to preserve time-dependence of the P&L
 function as well as variable correlations, by conditionally block
 sampling from a time-indexed market data matrix, constructed with
 historical time-series.
+
 
 The market data matrix rows are time-indexed daily in ascending order,
 with the columns:
@@ -332,6 +344,7 @@ which values are read is:
     ${(t}_{scheduling\ lag} - 1\  + \ t_{1}\  + \ t_{origin\ port\ arrival \rightarrow port\ departure}\  + \ t_{sea\ passage} + \ t_{destination\ port\ arrival \rightarrow berth\ departure})$.
     Represents time at which total exposure ends.
 
+
 Simplified to Matrix Timestamps:
 
 $$Node\ 1:\ t_{1}$$
@@ -378,6 +391,7 @@ $$Node\ 6 - Node\ 3 = Financing\ exposure$$
 
 $$Node\ 6 - Node\ 1 = Total\ trade\ exposure$$
 
+
 Handling of market data matrix missing values:
 
 The time-series for financial data (Dated Brent, WTI Houston FOB, SOFR
@@ -393,6 +407,7 @@ values before and after the anchor.
 Vessel tracking data (t columns in the matrix) does not have a
 consistent time-series. When the algorithm lands on a date where a t
 value is read, it takes the absolute closest value.
+
 
 Combining the tracing and reading processes gives the complete P&L
 sampling procedure of:
@@ -429,6 +444,7 @@ read and stored at arbitrage decision, rather than $t_{1}$.
 
 !The two assessments around those at BL and discharge are also taken, in
 line with the SPA 5-day average pricing convention.
+
 
 Exclusions (Within Scope of the Trade Structure):
 
@@ -467,6 +483,7 @@ both requiring the data for justification.
     is preferred due to higher capital deployment efficiency. The
     decision rule only accounts for risk-adjusted return.
 
+
 Assumptions:
 
 1.  Aframax: Aframax ships are common for the USG-NWE route. As they are
@@ -481,9 +498,9 @@ Assumptions:
     provisions are accounted for, avoiding under and overloading. Fuel
     may be especially heavy for this long-haul route.
 
-> ICE Futures Contract requires WTI API Gravity 40.0≤°API≤44.0. Using
-> the following formula from the US Energy Information Administration,
-> barrels can be derived:
+    ICE Futures Contract requires WTI API Gravity 40.0≤°API≤44.0. Using
+    the following formula from the US Energy Information Administration,
+    barrels can be derived:
 
 $$Density = \frac{141.5}{131.5 + {^\circ}API}\  \times 999.016,{kgm}^{- 3},$$
 
@@ -523,18 +540,18 @@ midpoint rounded to 2sf.
     Port of Rotterdam's tariff book, then treats the rest of the
     expenses as a proportion of the seaport dues.
 
-> Estimating Aframax gross tonnage at 60,000mt, with no ESI score or
-> Green Award gives seaport dues equal to €83,884.74 for a 95,000mt
-> cargo, using the steps outlined in the tariff book. It is rounded to
-> €84,000 (2sf). This value is taken as a proxy of other ports' seaport
-> dues, representing those in the US Gulf and Northwestern Europe.
->
-> Triangular distributions are used to parametrise when a variable is
-> assumed to be less correlated with the others in the P&L function,
-> such that its draw does not imply impossible market combinations. The
-> parameters for $\varepsilon_{3}$ and $\varepsilon_{4}$ are chosen on
-> the assumption that the other port expenses do not exceed 1.2x seaport
-> dues, and outcomes are slightly skewed towards the upper bound.
+    Estimating Aframax gross tonnage at 60,000mt, with no ESI score or
+    Green Award gives seaport dues equal to €83,884.74 for a 95,000mt
+    cargo, using the steps outlined in the tariff book. It is rounded to
+    €84,000 (2sf). This value is taken as a proxy of other ports' seaport
+    dues, representing those in the US Gulf and Northwestern Europe.
+
+    Triangular distributions are used to parametrise when a variable is
+    assumed to be less correlated with the others in the P&L function,
+    such that its draw does not imply impossible market combinations. The
+    parameters for $\varepsilon_{3}$ and $\varepsilon_{4}$ are chosen on
+    the assumption that the other port expenses do not exceed 1.2x seaport
+    dues, and outcomes are slightly skewed towards the upper bound.
 
 9.  $\varepsilon_{1}\sim Tri(75,200,125)\ in\ bps$: Financing agreements
     are confidential. Basis points are added to SOFR 30-day average
@@ -573,19 +590,20 @@ midpoint rounded to 2sf.
     destination port. The vessel tracking data obtained has the
     following timestamps:
 
-> Origin: Port limit arrival, berth arrival, berth departure and port
-> limit departure.
->
-> Destination: port limit arrival, berth arrival, berth departure and
-> port limit departure.
->
-> BL is approximated to the date of origin port limit departure whilst
-> discharge approximated to the date of berth departure for destination
-> port. BL is not issued at berth departure for ease of implementation,
-> as the mapping distorts exposure windows in the timeline. Usually, it
-> is very common for berth departure and port limit departure to fall on
-> the same day. Laytime clock ends at berth departure for origin and
-> destination ports as it is the closest available timestamp.
+    Origin: Port limit arrival, berth arrival, berth departure and port
+    limit departure.
+
+    Destination: port limit arrival, berth arrival, berth departure and
+    port limit departure.
+
+    BL is approximated to the date of origin port limit departure whilst
+    discharge approximated to the date of berth departure for destination
+    port. BL is not issued at berth departure for ease of implementation,
+    as the mapping distorts exposure windows in the timeline. Usually, it
+    is very common for berth departure and port limit departure to fall on
+    the same day. Laytime clock ends at berth departure for origin and
+    destination ports as it is the closest available timestamp.
+
 
 Limitations:
 
@@ -598,6 +616,7 @@ Limitations:
 2.  Whilst triangular distributions are practical, they understate tail
     risk because of the fixed boundaries. This is partially offset by
     conservative estimates.
+
 
 Sources
 
@@ -622,4 +641,5 @@ https://rosewoodfinance.co.uk/trade-finance/
 
 
 .
+
 
