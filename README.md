@@ -1,148 +1,93 @@
-**FOB USG-NWE Voyage P&L Model**
+# FOB USG–ARA Voyage P&L Model
 
-**Historical Monte-Carlo Simulation of WTI-Brent crude arbitrage under
-market and operational risk.**
+A stochastic decision-support tool for evaluating the commercial viability of WTI crude arbitrage from the US Gulf Coast to Northwest Europe.
 
+---
 
-About: Independently designed and implemented in Python by Adam Palmer,
-second year undergrad at the University of Nottingham
-(19/12/25-present).
+## Overview
 
+Given live WTI Houston FOB prices and the prevailing WTI/Brent spread, the model simulates voyage P&L for a single Aframax shipment across thousands of historical market and operational scenarios. It outputs a P&L distribution, expected value, CVaR at the 5th percentile, and a risk-adjusted go/no-go recommendation based on an EV/CVaR₀.₀₅ ≥ 1.0 decision rule.
 
-The model is used as a decision tool for evaluating the commercial
-viability of a single Aframax shipment of WTI crude from the US Gulf
-Coast to Northwest Europe, given the current WTI-Brent spread. This is
-achieved by simulating voyage profitability under the various
-combinations of market and operational risk factors. Live WTI Houston
-FOB and WTI-Brent spread user inputs generate the following outputs: P&L
-distributions, expected profit, expected shortfall and decision
-surfaces. A trade is recommended if its expected profit sufficiently
-compensates for the risk of loss.
+The model quantifies the stochastic arithmetic of an unhedged voyage. The trader overlays basis view, hedging strategy, and counterparty assessment on top. Basis and counterparty data are excluded due to proprietary data constraints; hedging is excluded because the model targets a risk warehousing trade structure.
 
-The USG-NWE export flow is monitored for several reasons. As the markets
-are geographically separated by transport time and costs, regional
-prices do not converge. The spread persists because transportation
-constraints are binding and operational execution risk is large. WTI
-exports to Northwest Europe are specifically common due to compatible
-refinery infrastructure. As WTI and Brent crude have similar chemical
-compositions, NWE refineries search for opportunities to increase
-margins by substituting local Brent with cheaper WTI barrels. In the US
-shale boom of 2011-2014, the oversupply of crude oil caused heavy WTI
-discounting, exacerbated by the US export ban. When the ban was lifted
-in 2015, exports surged and the spread reduced, often resulting in thin
-arbitrage margins. As arbitrage profitability is no longer obvious, the
-model provides decision-making insight.
+---
 
+## Trade Structure
 
-Project Charter:
+| Parameter | Specification |
+|---|---|
+| Commodity | Crude Oil |
+| Origin proxy | WTI Houston FOB |
+| Destination proxy | Dated Brent |
+| Route | USG → ARA |
+| Vessel class | Aframax |
+| Cargo size | 730,000 bbl / 95,000 mt |
+| Incoterms | FOB Buy USG, CIF Sell ARA |
+| Decision rule | EV/CVaR₀.₀₅ ≥ 1.0 |
 
-Commodity: Crude Oil
+**Timeline:** At *t* = 0, freight is fixed and WTI is purchased under a Sales and Purchase Agreement (SPA), with a Letter of Credit issued to the USG counterparty. The buy leg is priced as the 5-day average of WTI Houston FOB assessments around the Bill of Lading date. The vessel transits to ARA, where the sell leg floats to the 5-day average of Dated Brent assessments around discharge. Financing accrues from BL to settlement under SOFR plus a credit spread. Total exposure spans arbitrage decision to ARA counterparty settlement.
 
-Origin proxy: WTI
+**P&L components:** Spread − Freight − Financing − Demurrage − Insurance − Port Fees
 
-Destination proxy: Brent
+---
 
-Route: USG--NWE
+## Methodology
 
-Vessel class: Aframax
+Non-deterministic voyage costs are simulated via **regime-conditioned historical block bootstrapping** on a time-indexed market data matrix. Each simulation path is anchored to a historically similar WTI level and spread regime, so the model inherits the empirical joint distribution of market variables without parametric assumptions about their dependence structure.
 
-Cargo size: 730kbbl
+The matrix traces six nodes through the trade timeline — from arbitrage decision to settlement — reading market and operational variables at each. Variables unavailable for bootstrapping due to confidentiality (demurrage, financing spread, port fees, cargo loss) are parametrised with triangular distributions under conservative assumptions.
 
-Incoterms: FOB Buy USG, CIF Sell NWE
+Full methodology is documented separately.
 
-Decision rule: EV/CVaR~0.05~ ≥ 0.75
+**Market data inputs (Bloomberg):** Dated Brent, WTI Houston FOB, TD25 Flat Rate, WS Quote, SOFR, FX, AIS vessel tracking.
 
+---
 
-Methodology
+## Getting Started
 
-1.  Trade structure:
+```bash
+git clone <repo-url>
+cd FOB_USG-ARA_Voyage_PL_Model
+python -m venv .venv && .venv\Scripts\activate  # Windows
+source .venv/bin/activate                        # macOS/Linux
+pip install -r requirements.txt
+python main.py
+```
 
-The model estimates voyage P&L from arbitrage decision to destination
-port discharge for a fixed trade structure, with total exposure spanning
-arbitrage decision (t=0) to settlement.
+Market inputs and simulation parameters are configured in `src/config.py`. Results are written to `outputs/`.
 
-Timeline
+---
 
-At t=0, freight is fixed and WTI is bought, with the laycan window
-aligned with cargo readiness to load. The vessel spends an elapsed time
-at the port of origin in the US Gulf before transit, arriving at a port
-in the ARA region and discharging, ending market exposure. Operational
-exposure ends after discharge at settlement, where financing is repaid.
+## Project Structure
 
-Conventions
+```
+src/
+├── config.py       # Parameters and thresholds
+├── pnl.py          # P&L sub-functions
+├── simulate.py     # Monte-Carlo engine
+└── report.py       # Output generation
+data/
+├── raw/            # Source market data
+└── processed/      # Market data matrix
+outputs/            # Simulation results
+```
 
-Revenue is from WTI resale at a Brent-linked price. Costs are: WTI
-purchase, cost of transport (Freight), interest (Financing), cost of
-port delay (Demurrage), insurance, evaporation, handling and measurement
-error ($Q_{BL} \neq Q_{Discharge}$) and port fees.
+---
 
-Sales and Purchase Agreement (SPA):
+## Status
 
-- Cargo quantity of 730kbbl bought at arbitrage decision
+Active development. Regime conditioning and backtesting protocol are current workstreams; core methodology is complete.
 
-- Buy leg priced as the 5-day average of daily WTI Houston FOB
-  assessments around the Bill of Lading (BL) date
+Second-year undergraduate research project — University of Nottingham.
 
-- If BL falls on a non-trading day, the nearest previous assessment
-  represents price at BL
+---
 
-- Sell leg is left floating, priced as the 5-day average of Dated Brent
-  assessments around discharge
+## Author
 
-- If discharge falls on a non-trading day, the nearest previous
-  assessment represents price at discharge
+**Adam Palmer** · University of Nottingham
 
-- NWE counterparty pays for cargo quantity at discharge
+---
 
-- Settlement under Cash Against Documents (CAD)
+## Licence
 
-- Institute Cargo Clauses A coverage
-
-- Insured value is 110% of the underlying cargo value
-
-- Insurance premium of 0.50%
-
-- Settlement delay for NWE counterparty limited to 30 days
-
-
-Charterparty:
-
-- Aframax and freight rate are fixed at arbitrage decision
-
-- Full freight payment at BL for voyage charter, priced off WS quote
-
-- Notice of Readiness (NOR) issued at port limits (WIBON)
-
-- 72-hour total running laytime, Sundays and holidays included,
-  non-reversible. Maximum of 36 hours at origin and destination
-
-- Laytime clock begins 6 hours after NOR at origin and destination port
-
-- Demurrage rate of \$75,000/day
-
-- Laytime clock ends at hose disconnection
-
-- Destination port fees accrued after discharge are borne by the
-  shipowner
-
-
-Financing:
-
-- Letter of credit issued from bank to USG counterparty after arbitrage
-  decision
-
-- Priced at cargo value convention in SPA
-
-- Interest accrues from BL until settlement, under ACT 365
-
-- Interest rate fixed at BL, charged at SOFR 30-day average plus a
-  positive basis range
-
-
-
-
-
-.
-
-
-
+See [LICENSE](./LICENSE).
